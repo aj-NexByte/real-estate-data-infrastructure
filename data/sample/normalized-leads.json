@@ -1,0 +1,23 @@
+[
+  {
+    "propertyAddress": "1452 W Fulton St",
+    "county": "Cook",
+    "state": "IL",
+    "parcelNumber": "17-08-214-031-0000",
+    "ownerName": "Maple Crest Holdings LLC",
+    "sourceType": "TAX_LIEN",
+    "distressTags": ["tax_lien", "vacant", "absentee_owner", "equity_rich"],
+    "estimatedEquity": 265000,
+    "taxDelinquencyAmount": 14680,
+    "confidenceScore": 76
+  },
+  {
+    "propertyAddress": "9824 Cedar Bluff Ln",
+    "county": "Duval",
+    "state": "FL",
+    "ownerName": "Erica Thompson",
+    "sourceType": "CODE_VIOLATION",
+    "distressTags": ["code_violation", "probate"],
+    "confidenceScore": 74
+  }
+]

@@ -1,0 +1,4 @@
+record_id,property_address,city,state,zip_code,county,parcel_number,owner_name,mailing_address,filing_date,notice_date,assessed_value,market_value,estimated_equity,tax_delinquency_amount,absentee_owner,vacant
+tax-1001,1452 W Fulton St,Chicago,IL,60607,Cook,17-08-214-031-0000,Maple Crest Holdings LLC,"PO Box 554, Naperville, IL 60566",2026-03-20,2026-03-18,420000,760000,265000,14680,yes,yes
+tax-1002,7610 S Bishop St,Chicago,IL,60620,Cook,20-31-114-221-0000,Deandre Lewis,"7610 S Bishop St, Chicago, IL 60620",2026-04-05,2026-04-02,118000,205000,95000,6840,no,no
+tax-1003,1209 N Lorel Ave,Chicago,IL,60651,Cook,16-04-220-018-0000,Roseview Property Group,"300 W Adams St, Chicago, IL 60606",2026-02-14,2026-02-10,240000,390000,155000,22300,yes,yes

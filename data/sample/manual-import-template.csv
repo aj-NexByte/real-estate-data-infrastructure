@@ -1,0 +1,2 @@
+record_id,property_address,city,state,zip_code,county,parcel_number,owner_name,mailing_address,filing_date,notice_date,assessed_value,market_value,estimated_equity,tax_delinquency_amount,absentee_owner,vacant,source_url,notes
+manual-001,4118 N 73rd Dr,Phoenix,AZ,85033,Maricopa,102-55-888,Saguaro Peak Investments,"7201 W Sunnyslope Dr, Peoria, AZ 85345",2026-03-11,2026-03-10,240000,365000,78000,8300,yes,no,https://example.com/broker-list,Imported from broker distress list

@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceType {
+  TAX_LIEN
+  FORECLOSURE
+  PROBATE
+  CODE_VIOLATION
+  EVICTION
+  DELINQUENT_TAX
+  SHERIFF_SALE
+  VACANT_PROPERTY
+  DEED_TRANSFER
+  LIS_PENDENS
+  UTILITY_SHUTOFF
+  MANUAL_IMPORT
+}
+
+enum LeadStatus {
+  NEW
+  REVIEWED
+  CONTACTED
+  FOLLOW_UP
+  DEAD
+}
+
+enum OccupancyType {
+  OWNER_OCCUPIED
+  ABSENTEE
+  UNKNOWN
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+}
+
+enum IngestionRunStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+model User {
+  id             String      @id @default(cuid())
+  email          String      @unique
+  passwordHash   String?
+  name           String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  notes          LeadNote[]
+  contactEvents  ContactEvent[]
+  tasks          LeadTask[]
+  savedFilters   SavedFilter[]
+}
+
+model CountySourceConfig {
+  id                  String           @id @default(cuid())
+  county              String
+  state               String
+  sourceType          SourceType
+  sourceKey           String           @unique
+  displayName         String
+  sourceUrl           String?
+  adapterKey          String
+  enabled             Boolean          @default(true)
+  requiresBrowser     Boolean          @default(false)
+  allowsScraping      Boolean          @default(false)
+  robotsReviewStatus  String           @default("pending_review")
+  termsReviewStatus   String           @default("pending_review")
+  rateLimitPerMinute  Int              @default(12)
+  scheduleCron        String?
+  metadata            Json?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  ingestionRuns       IngestionRun[]
+  leadSources         LeadSourceRecord[]
+}
+
+model Lead {
+  id                    String             @id @default(cuid())
+  propertyAddress       String
+  propertyAddressNorm   String
+  city                  String?
+  state                 String
+  zipCode               String?
+  parcelNumber          String?
+  parcelNumberNorm      String?
+  ownerName             String?
+  ownerNameNorm         String?
+  mailingAddress        String?
+  county                String
+  sourceTypes           SourceType[]
+  primarySourceType     SourceType
+  sourceUrl             String?
+  filingDate            DateTime?
+  noticeDate            DateTime?
+  lastSeenAt            DateTime?
+  assessedValue         Decimal?           @db.Decimal(14, 2)
+  estimatedMarketValue  Decimal?           @db.Decimal(14, 2)
+  estimatedEquity       Decimal?           @db.Decimal(14, 2)
+  ownershipLengthMonths Int?
+  taxDelinquencyAmount  Decimal?           @db.Decimal(14, 2)
+  occupancyType         OccupancyType      @default(UNKNOWN)
+  vacantIndicator       Boolean            @default(false)
+  status                LeadStatus         @default(NEW)
+  distressTags          String[]
+  phone                 String?
+  email                 String?
+  notes                 String?
+  aiSummary             String?
+  aiPriorityReason      String?
+  leadScore             Int                @default(0)
+  confidenceScore       Int                @default(0)
+  rawReference          String?
+  rawPayload            Json?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  sources               LeadSourceRecord[]
+  notesTimeline         LeadNote[]
+  tasks                 LeadTask[]
+  contactHistory        ContactEvent[]
+
+  @@index([county, state, status])
+  @@index([propertyAddressNorm])
+  @@index([parcelNumberNorm])
+  @@index([ownerNameNorm])
+}
+
+model LeadSourceRecord {
+  id                  String             @id @default(cuid())
+  leadId              String
+  countySourceConfigId String?
+  sourceType          SourceType
+  sourceRecordId      String?
+  sourceUrl           String?
+  filingDate          DateTime?
+  noticeDate          DateTime?
+  status              String?
+  distressTags        String[]
+  normalizedHash      String
+  rawPayload          Json
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  lead                Lead               @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  countySourceConfig  CountySourceConfig? @relation(fields: [countySourceConfigId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceType, normalizedHash])
+  @@index([leadId])
+}
+
+model LeadNote {
+  id          String    @id @default(cuid())
+  leadId      String
+  authorId    String?
+  body        String
+  createdAt   DateTime  @default(now())
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model LeadTask {
+  id          String     @id @default(cuid())
+  leadId      String
+  ownerId     String?
+  title       String
+  dueAt       DateTime?
+  status      TaskStatus @default(OPEN)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  lead        Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  owner       User?      @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+}
+
+model ContactEvent {
+  id          String    @id @default(cuid())
+  leadId      String
+  userId      String?
+  channel     String
+  summary     String
+  occurredAt  DateTime  @default(now())
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model IngestionRun {
+  id                  String             @id @default(cuid())
+  countySourceConfigId String?
+  sourceKey           String
+  adapterKey          String
+  status              IngestionRunStatus @default(PENDING)
+  startedAt           DateTime           @default(now())
+  finishedAt          DateTime?
+  recordsFetched      Int                @default(0)
+  recordsNormalized   Int                @default(0)
+  leadsCreated        Int                @default(0)
+  leadsUpdated        Int                @default(0)
+  errorsCount         Int                @default(0)
+  message             String?
+  errorLog            Json?
+  metadata            Json?
+  countySourceConfig  CountySourceConfig? @relation(fields: [countySourceConfigId], references: [id], onDelete: SetNull)
+
+  @@index([sourceKey, startedAt])
+}
+
+model SavedFilter {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  query       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
